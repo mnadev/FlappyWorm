@@ -149,8 +149,9 @@ public class FlappyBird extends PApplet {
 			    textSize(32);
 			    text("Press any key to start and any key to jump", 50, 450);
 		    } else {
+		    	
 		    		for(Pipe p: pipes) {
-		    			if(worm.x + 150 - p.x < 100 && worm.x + 150 - p.x > 0) {
+		    			if(p.x - worm.x < 100 && worm.x - p.x < 150) {
 		    				if(!(worm.y > y &&  worm.y < 250 + y)) {
 		    					didHit = true;
 		    				}
@@ -185,9 +186,9 @@ public class FlappyBird extends PApplet {
 		    }
 		    
 	    } else {
-	    		int min = sum/3600;
+	    		int sec = sum/60;
 	    		textSize(32);
-	    		text("You lasted " + min + " minutes", 50, 450);
+	    		text("You lasted " + sec + " seconds", 50, 450);
 	    }
 	    
 	    if(pipes.size() > 5) {
