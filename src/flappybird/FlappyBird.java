@@ -1,10 +1,17 @@
 package flappybird;
 
 import java.util.ArrayList;
-
+import java.util.Scanner;
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
 import processing.core.PApplet;
 //import processing.core.PGraphics;
 import processing.serial.*;
+import controlP5.*;
 
 public class FlappyBird extends PApplet {
 	
@@ -91,7 +98,7 @@ public class FlappyBird extends PApplet {
 	 */
 	public static int y = 350;
 	
-	
+	public ControlP5 cp5;
 	
 	
 	/**
@@ -126,12 +133,21 @@ public class FlappyBird extends PApplet {
 	 * This list holds all the pipes that are currently in scope.
 	 */
 	public static ArrayList<Pipe> pipes = new ArrayList<Pipe>();
+	
 	/**
 	 * This list holds all users/players.
 	 */
 	public static ArrayList<User> users = new ArrayList<User>();
 	
+	/**
+	 * This holds current player.
+	 */
+	public static User user;
 	
+	/**
+	 * This holds current player index.
+	 */
+	public static int userInd = 0;
 	
 	/** 
 	 * This integer keeps track of how long the worm lived.
@@ -148,8 +164,26 @@ public class FlappyBird extends PApplet {
 	 */
 	public static int startInd = 0;
 
+	public static String scoreFile = "res/users.ser";
 	
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
+		try {
+			File f = new File(scoreFile);
+			FileInputStream fs = new FileInputStream(f);
+			@SuppressWarnings("resource")
+			ObjectInputStream objOut = new ObjectInputStream(fs);
+			users = (ArrayList<User>) objOut.readObject();
+		} catch(Exception e) {
+			
+		}
+		
+		System.out.println("User enter your name:");
+		Scanner sc = new Scanner(System.in);
+		user = new User(sc.nextLine());
+		users.add(user);
+		sc.close();
+		
 		//run applet
 		PApplet.main("flappybird.FlappyBird");
 	}
@@ -159,6 +193,9 @@ public class FlappyBird extends PApplet {
 		size(1000, 750);
 		// create worm
 		worm = new Worm();
+		
+		//create control p5
+		//cp5 = new ControlP5(this);
 	}
 	
 	
@@ -191,7 +228,8 @@ public class FlappyBird extends PApplet {
 	    		
 			// if worm.y > 800, then worm hits ground, it's not in air and thus game is over
 			if(worm.y > 600) {
-				System.out.println("1");
+				//System.out.println("1");
+				user.addScore(score);
 				gameOver = true;
 				gameRun = false;
     			}
@@ -212,7 +250,8 @@ public class FlappyBird extends PApplet {
 	    				// check if worm hit top pipe 
 	    				// worm.y must be < p.height
 	    				if(worm.y < p.height) {
-	    					System.out.println("2");
+	    					//System.out.println("2");
+	    					user.addScore(score);
 		    				gameOver = true;
 		    				gameRun = false;
 	    				}
@@ -221,7 +260,8 @@ public class FlappyBird extends PApplet {
 	    				// worm.y must be > p.height + 300
 	    				
 	    				if(worm.y > (p.height + 300)) {
-	    					System.out.println("3");
+	    					//System.out.println("3");
+	    					user.addScore(score);
 		    				gameOver = true;
 		    				gameRun = false;
 	    				}
@@ -250,18 +290,46 @@ public class FlappyBird extends PApplet {
 	    		text("Press r to reset", 400,400);
 	    		
 	    		textSize(32);
-	    		text("Your score was" + score % 60, 400,450);
+	    		text("Your score was " + score, 400,450);
 	    		if(keyPressed) {
 	    			if(key == 'r' || key == 'R') {
 	    				score = 0;
 			    		gameOver = false;
-			    		gameRun = true;
+			    		gameRun = false;
 			    		pipes = new ArrayList<Pipe>();
 	    			}
 	    		}
 	    } else if(seeScores) {
+		    	textSize(32);
 	    		
+		    	int i = 1;
+		    	
+		    for(User u: users) {
+		    		text(i + ".", 390, 100 + i * 50);
+		    		text(u.name, 420, 100 + i * 50);
+		    		
+		    		int j = 0;
+		    		for(Integer sc: u.scores) {
+		    			text(sc, 470, 100 + i * 50);
+		    			j++;
+		    			if(j > 0) {
+		    				break;
+		    			}
+		    		}
+		    		
+		    		if(i > 10) {
+		    			break;
+		    		}
+		    		i++;
+		    }
 	    } else {
+	    	    /*
+	    		cp5.addTextfield("input")
+	        .setPosition(20,100)
+	        .setSize(200,40)
+	        .setColor(color(255,0,0))
+	        	; */
+	    	
 	    		textSize(32);
 	    		
 	    		// print the menu
@@ -296,6 +364,15 @@ public class FlappyBird extends PApplet {
 			    				break;
 			    			default:
 			    				System.exit(0);
+							try {
+								FileOutputStream write = new FileOutputStream(scoreFile);
+								ObjectOutputStream output = new ObjectOutputStream(write);
+								output.writeObject(users);
+								output.close();
+								write.close();
+							} catch (Exception e) {
+							
+							}
 			    				break;
 		    			}
 		    		}
